@@ -6,6 +6,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,7 +30,8 @@ public class ReactorStringBootApplication implements CommandLineRunner {
 //        useFluxAndSubscribe();
 //        useMapOperator();
 //        useFilterOperator();
-        desdeList();
+//        desdeList();
+        flatMapOperator();
     }
 
     public void useFluxAndSubscribe() {
@@ -107,8 +109,8 @@ public class ReactorStringBootApplication implements CommandLineRunner {
         usuariosList.add("Nala Velasquez");
 
         Flux<String> nombres = Flux.fromIterable(usuariosList);
-
-        nombres.map(nombre -> new Usuario(nombre.split(" ")[0].toUpperCase(), nombre.split(" ")[1].toUpperCase()))
+        Flux<Usuario> usuarios = nombres.map(
+                        nombre -> new Usuario(nombre.split(" ")[0].toUpperCase(), nombre.split(" ")[1].toUpperCase()))
                 .filter(u -> u.getApellido() != null)
                 .filter(u -> u.getApellido().equalsIgnoreCase("Velasquez"))
                 .doOnNext(usuario -> {
@@ -123,8 +125,32 @@ public class ReactorStringBootApplication implements CommandLineRunner {
                     return usuario;
                 });
 
-        nombres.subscribe(e -> log.info(e));
+        usuarios.subscribe(e -> log.info(String.valueOf(e)));
 
+    }
+
+    public void flatMapOperator() {
+
+        List<String> usuariosList = new ArrayList<>();
+        usuariosList.add("Samuel Velasquez");
+        usuariosList.add("Matias Velasquez");
+        usuariosList.add("Eliana Cuadros");
+        usuariosList.add("Hernan Velasquez");
+        usuariosList.add("Nala Velasquez");
+
+        Flux.fromIterable(usuariosList)
+                .map(nombre -> new Usuario(nombre.split(" ")[0].toUpperCase(), nombre.split(" ")[1].toUpperCase()))
+                .flatMap(user -> {
+                    if (user.getApellido().equalsIgnoreCase("Velasquez")) {
+                        return Mono.just(user);
+                    }
+                    return Mono.empty();
+                })
+                .map(usuario -> {
+                    String nombre = usuario.getNombre().toLowerCase();
+                    usuario.setNombre(nombre);
+                    return usuario;
+                }).subscribe(u -> log.info(PREFIJO, u.toString()));
     }
 
 }
