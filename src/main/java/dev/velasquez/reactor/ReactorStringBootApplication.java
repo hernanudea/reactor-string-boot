@@ -1,6 +1,8 @@
 package dev.velasquez.reactor;
 
+import dev.velasquez.reactor.models.Comentarios;
 import dev.velasquez.reactor.models.Usuario;
+import dev.velasquez.reactor.models.UsuarioConComentarios;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
@@ -33,7 +35,10 @@ public class ReactorStringBootApplication implements CommandLineRunner {
 //        desdeList();
 //        flatMapOperator();
 //        ejemploToString();
-        ejemploToCollectList();
+//        ejemploToCollectList();
+//        ejemploUsuarioComentarioFlatMap();
+//        ejemploZipWithByCodeium();
+        ejemploZipWith();
     }
 
 
@@ -189,4 +194,56 @@ public class ReactorStringBootApplication implements CommandLineRunner {
                 .collectList()
                 .subscribe(lista -> lista.forEach(item -> log.info(item.toString())));
     }
+
+    public void ejemploUsuarioComentarioFlatMap() { // corregir
+        Mono<Usuario> usuarioMono = Mono.just(new Usuario("Samuel", "Velasquez"));
+        Mono<Comentarios> comentariosUsuarioMono = Mono.fromCallable(() -> {
+            Comentarios comentarios = new Comentarios();
+            comentarios.addComentario("Comentario1");
+            comentarios.addComentario("Comentario2");
+            comentarios.addComentario("Comentario3");
+            return comentarios;
+        });
+
+        usuarioMono.flatMap(u -> comentariosUsuarioMono.map(c -> new UsuarioConComentarios(u, c)))
+                .subscribe(uc -> log.info(uc.toString()));
+    }
+
+    //    Operador zipWith, recibe dos flujos y los combina
+    public void ejemploZipWithByCodeium() {
+        List<Usuario> usuariosList = new ArrayList<>();
+        usuariosList.add(new Usuario("Samuel", "Velasquez"));
+        usuariosList.add(new Usuario("Matias", "Velasquez"));
+        usuariosList.add(new Usuario("Eliana", "Cuadros"));
+        usuariosList.add(new Usuario("Hernan", "Velasquez"));
+        usuariosList.add(new Usuario("Nala", "Velasquez"));
+
+        Flux<Usuario> usuariosFlux = Flux.fromIterable(usuariosList);
+        Flux<Integer> edadesFlux = Flux.range(20, 5);
+
+        usuariosFlux.zipWith(edadesFlux)
+                .subscribe(tuple -> {
+                    Usuario usuario = tuple.getT1();
+                    Integer edad = tuple.getT2();
+                    log.info("Usuario: " + usuario + ", Edad: " + edad);
+                });
+    }
+
+    public void ejemploZipWith() { // corregir
+        Mono<Usuario> usuarioMono = Mono.just(new Usuario("Samuel", "Velasquez"));
+        Mono<Comentarios> comentariosUsuarioMono = Mono.fromCallable(() -> {
+            Comentarios comentarios = new Comentarios();
+            comentarios.addComentario("Comentario1");
+            comentarios.addComentario("Comentario2");
+            comentarios.addComentario("Comentario3");
+            return comentarios;
+        });
+
+        Mono<UsuarioConComentarios> usuarioConComentariosMono = usuarioMono.zipWith(comentariosUsuarioMono, (usuario, comentarioUsuario) ->
+                new UsuarioConComentarios(usuario, comentarioUsuario));
+
+        usuarioConComentariosMono.subscribe(uc -> log.info(uc.toString()));
+
+    }
+
 }
