@@ -7,6 +7,9 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import reactor.core.publisher.Flux;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Slf4j
 @SpringBootApplication
 public class ReactorStringBootApplication implements CommandLineRunner {
@@ -25,7 +28,8 @@ public class ReactorStringBootApplication implements CommandLineRunner {
 
 //        useFluxAndSubscribe();
 //        useMapOperator();
-        useFilterOperator();
+//        useFilterOperator();
+        desdeList();
     }
 
     public void useFluxAndSubscribe() {
@@ -70,7 +74,7 @@ public class ReactorStringBootApplication implements CommandLineRunner {
     }
 
     public void useFilterOperator() {
-        Flux<Usuario> nombres = Flux.just("Samuel Velasquez", "Matias Velasquez", "Eliana Cuadros", "Hernan Velasquez", "Bruce Lee", "Bruce Willis")
+        Flux<Usuario> nombres = Flux.just("Samuel Velasquez", "Matias Velasquez", "Eliana Cuadros", "Hernan Velasquez", "Bruce Lee", "Bruce Willis", "Nala Velasquez")
                 .map(nombre -> new Usuario(nombre.split(" ")[0].toUpperCase(), nombre.split(" ")[1].toUpperCase()))
                 .filter(u -> u.getApellido() != null)
                 .filter(u -> u.getApellido().equalsIgnoreCase("Velasquez"))
@@ -89,6 +93,38 @@ public class ReactorStringBootApplication implements CommandLineRunner {
         nombres.subscribe(e -> log.info(PREFIJO, e.getNombre()),
                 error -> log.info(error.getMessage()),
                 () -> log.info(FINALIZADO));
+    }
+
+    public void desdeList() {
+      /*  las bases de datos revuelan la lista, podriamos convertirla en un Flux
+        convertirlo en un flux y
+      */
+        List<String> usuariosList = new ArrayList<>();
+        usuariosList.add("Samuel Velasquez");
+        usuariosList.add("Matias Velasquez");
+        usuariosList.add("Eliana Cuadros");
+        usuariosList.add("Hernan Velasquez");
+        usuariosList.add("Nala Velasquez");
+
+        Flux<String> nombres = Flux.fromIterable(usuariosList);
+
+        nombres.map(nombre -> new Usuario(nombre.split(" ")[0].toUpperCase(), nombre.split(" ")[1].toUpperCase()))
+                .filter(u -> u.getApellido() != null)
+                .filter(u -> u.getApellido().equalsIgnoreCase("Velasquez"))
+                .doOnNext(usuario -> {
+                    if (usuario == null) {
+                        throw new RuntimeException(ERROR_MESSAGE);
+                    }
+                    log.info(PREFIJO, usuario.toString().concat(":").concat(usuario.getApellido()));
+                })
+                .map(usuario -> {
+                    String nombre = usuario.getNombre().toLowerCase();
+                    usuario.setNombre(nombre);
+                    return usuario;
+                });
+
+        nombres.subscribe(e -> log.info(e));
+
     }
 
 }
