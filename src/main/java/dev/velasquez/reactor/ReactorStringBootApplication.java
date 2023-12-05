@@ -31,8 +31,11 @@ public class ReactorStringBootApplication implements CommandLineRunner {
 //        useMapOperator();
 //        useFilterOperator();
 //        desdeList();
-        flatMapOperator();
+//        flatMapOperator();
+//        ejemploToString();
+        ejemploToCollectList();
     }
+
 
     public void useFluxAndSubscribe() {
         Flux<String> nombre = Flux.just("Samuel", "Matias", "Eliana", "Hernan")
@@ -153,4 +156,37 @@ public class ReactorStringBootApplication implements CommandLineRunner {
                 }).subscribe(u -> log.info(PREFIJO, u.toString()));
     }
 
+    public void ejemploToString() {
+        List<Usuario> usuariosList = new ArrayList<>();
+        usuariosList.add(new Usuario("Samuel", "Velasquez"));
+        usuariosList.add(new Usuario("Matias", "Velasquez"));
+        usuariosList.add(new Usuario("Eliana", "Cuadros"));
+        usuariosList.add(new Usuario("Hernan", "Velasquez"));
+        usuariosList.add(new Usuario("Nala", "Velasquez"));
+
+
+        Flux.fromIterable(usuariosList)
+                .map(usuario -> usuario.getNombre().toUpperCase().concat(" ").concat(usuario.getApellido().toUpperCase()))
+                .flatMap(nombre -> {
+                    if (nombre.contains("Velasquez".toUpperCase())) {
+                        return Mono.just(nombre);
+                    }
+                    return Mono.empty();
+                })
+                .map(String::toLowerCase).subscribe(u -> log.info(PREFIJO, u));
+    }
+
+    private void ejemploToCollectList() {
+        List<Usuario> usuariosList = new ArrayList<>();
+        usuariosList.add(new Usuario("Samuel", "Velasquez"));
+        usuariosList.add(new Usuario("Matias", "Velasquez"));
+        usuariosList.add(new Usuario("Eliana", "Cuadros"));
+        usuariosList.add(new Usuario("Hernan", "Velasquez"));
+        usuariosList.add(new Usuario("Nala", "Velasquez"));
+
+        // convertimos la lista completa en un Flux
+        Flux.fromIterable(usuariosList)
+                .collectList()
+                .subscribe(lista -> lista.forEach(item -> log.info(item.toString())));
+    }
 }
