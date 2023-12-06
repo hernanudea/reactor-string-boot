@@ -13,6 +13,7 @@ import reactor.core.publisher.Mono;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 
 @Slf4j
 @SpringBootApplication
@@ -43,8 +44,8 @@ public class ReactorStringBootApplication implements CommandLineRunner {
         // ejemploZipWithRange();
         //showTable(5);
 //        ejemploInterval();
-        ejemploDelayElements();
-
+//        ejemploDelayElements();
+        ejemploIntervalInfinito();
 
     }
 
@@ -293,5 +294,24 @@ public class ReactorStringBootApplication implements CommandLineRunner {
 //        rango.subscribe();
         rango.blockLast();
 //        de esta manera lo genera en diferentes hilos
+    }
+
+    public void ejemploIntervalInfinito() throws InterruptedException {
+
+        CountDownLatch latch = new CountDownLatch(1);
+
+        Flux.interval(Duration.ofSeconds(1))
+                .doOnTerminate(latch::countDown) // siempre se ejecuta, falle o no
+                .flatMap(i -> {
+                    if (i >= 5) {
+                        return Flux.error(new InterruptedException("Se acabo el tiempo"));
+                    }
+                    return Flux.just(i);
+                })
+                .map(i -> "Hola " + i)
+                .retry(2) // intenta dos veces cuando falla
+                .subscribe(s -> log.info(s), e -> log.info(e.getMessage()));
+
+        latch.await();
     }
 }
