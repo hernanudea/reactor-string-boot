@@ -13,6 +13,8 @@ import reactor.core.publisher.Mono;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.CountDownLatch;
 
 @Slf4j
@@ -45,8 +47,8 @@ public class ReactorStringBootApplication implements CommandLineRunner {
         //showTable(5);
 //        ejemploInterval();
 //        ejemploDelayElements();
-        ejemploIntervalInfinito();
-
+//        ejemploIntervalInfinito();
+        ejemploIntervalDesdeCreate();
     }
 
 
@@ -313,5 +315,31 @@ public class ReactorStringBootApplication implements CommandLineRunner {
                 .subscribe(s -> log.info(s), e -> log.info(e.getMessage()));
 
         latch.await();
+    }
+
+    public void ejemploIntervalDesdeCreate() {
+        Flux.create(emitter -> {
+                    Timer timer = new Timer();
+                    timer.schedule(new TimerTask() {
+
+                        private Integer contador = 0;
+
+                        @Override
+                        public void run() {
+                            emitter.next(++contador);
+                            if (contador == 10) {
+                                emitter.complete();
+                                timer.cancel();
+                            }
+                            if (contador == 5) {
+                                timer.cancel();
+                                emitter.error(new InterruptedException("Error, se ha detenido el flux en 5!"));
+                            }
+                        }
+                    }, 1000, 1000);
+                })
+                .subscribe(next -> log.info(next.toString()),
+                        error -> log.info(error.getMessage()),
+                        () -> log.info("Completado"));
     }
 }
