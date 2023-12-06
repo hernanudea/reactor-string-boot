@@ -10,6 +10,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -40,7 +41,10 @@ public class ReactorStringBootApplication implements CommandLineRunner {
 //        ejemploZipWithByCodeium();
 //        ejemploZipWith();
         // ejemploZipWithRange();
-        showTable(5);
+        //showTable(5);
+//        ejemploInterval();
+        ejemploDelayElements();
+
 
     }
 
@@ -264,5 +268,30 @@ public class ReactorStringBootApplication implements CommandLineRunner {
         Flux<Integer> product = numbers.map(i -> i * num);
         product.zipWith(numbers, (num1, num2) -> String.format("%d x %d = %d", num, num2, num1))
                 .subscribe(log::info);
+    }
+
+    public void ejemploInterval() {
+        Flux<Integer> rango = Flux.range(1, 12);
+        Flux<Long> retraso = Flux.interval(Duration.ofSeconds(1));
+
+        rango.zipWith(retraso, (ra, re) -> ra)
+                .doOnNext(i -> log.info(i.toString()))
+                //.subscribe();
+                .blockLast();
+
+        /* la programación reactiva es no bloqueante
+        si uso .subscribe(); no se bloquea, termina main y continua en optro hilo la ejecución
+        si uso .blockLast(); se bloquea hasta que termine la secuencia, permite verla, no util en codigo real, solo para el ejemplo
+         */
+    }
+
+    public void ejemploDelayElements() {
+        Flux<Integer> rango = Flux.range(1, 12)
+                .delayElements(Duration.ofSeconds(1))
+                .doOnNext(i -> log.info(i.toString()));
+
+//        rango.subscribe();
+        rango.blockLast();
+//        de esta manera lo genera en diferentes hilos
     }
 }
