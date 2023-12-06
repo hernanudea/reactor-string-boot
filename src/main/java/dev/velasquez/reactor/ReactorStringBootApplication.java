@@ -38,7 +38,10 @@ public class ReactorStringBootApplication implements CommandLineRunner {
 //        ejemploToCollectList();
 //        ejemploUsuarioComentarioFlatMap();
 //        ejemploZipWithByCodeium();
-        ejemploZipWith();
+//        ejemploZipWith();
+        // ejemploZipWithRange();
+        showTable(5);
+
     }
 
 
@@ -246,4 +249,20 @@ public class ReactorStringBootApplication implements CommandLineRunner {
 
     }
 
+    public void ejemploZipWithRange() {
+        Flux<Integer> rangos = Flux.range(1, 6);
+        Flux.just(1, 2, 3, 4, 5)
+                .map(i -> i * 3)
+                .zipWith(rangos, (uno, dos) ->
+                        String.format("Primer flux: %d, Segundo flux: %d", uno, dos))
+                .subscribe(log::info);
+
+    }
+
+    public void showTable(int num) {
+        Flux<Integer> numbers = Flux.range(1, 10);
+        Flux<Integer> product = numbers.map(i -> i * num);
+        product.zipWith(numbers, (num1, num2) -> String.format("%d x %d = %d", num, num2, num1))
+                .subscribe(log::info);
+    }
 }
